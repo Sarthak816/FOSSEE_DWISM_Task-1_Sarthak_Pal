@@ -1,0 +1,30 @@
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Secrets and local config
+.env
+.env.local
+
+# Editor / IDE metadata
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS junk
+Thumbs.db
+.DS_Store
+
+# Logs (the script produces these at runtime)
+*.log
+
+# DWSIM backup / temp files
+*.dwbak
+*.tmp

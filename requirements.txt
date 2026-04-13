@@ -1,0 +1,2 @@
+# .NET interop — bridges Python to the DWSIM .NET Automation API
+pythonnet>=3.0.0
