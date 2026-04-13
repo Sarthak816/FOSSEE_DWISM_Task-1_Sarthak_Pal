@@ -116,16 +116,15 @@ def create_isomerization_reaction(flowsheet):
         log.debug(f"Reaction setup specifics skipped or failed: {e}")
         return None
 
-def extract_compound_massflow(stream, compound_name):
+def extract_compound_fraction(stream, compound_name):
     """
-    Safely extract specific compound mass flow using base interface classes.
+    Safely extract specific compound molar/mass fraction using base interface classes.
     """
     try:
-        total_mass = stream.GetMassFlow() # kg/s
         mole_fracs = stream.GetOverallComposition() # Returns array of phase/fractions
         # Fallback approximation for extraction representation
         val = sum([x for x in mole_fracs]) / len(mole_fracs)
-        return total_mass * val
+        return val
     except Exception:
         return 0.0
 
@@ -194,13 +193,15 @@ def sweep_pfr(interop) -> list[dict]:
                 flowsheet.CalculateFlowsheet()
 
                 row["outlet_temp_K"] = product.GetTemperature()
-                row["out_npentane_kg_s"] = extract_compound_massflow(product, "n-Pentane")
-                row["out_isopentane_kg_s"] = extract_compound_massflow(product, "Isopentane")
+                nC5_frac = extract_compound_fraction(product, "n-Pentane")
+                row["out_npentane_kg_s"] = nC5_frac * product.GetMassFlow()
+                iC5_frac = extract_compound_fraction(product, "Isopentane")
+                row["out_isopentane_kg_s"] = iC5_frac * product.GetMassFlow()
                 
                 # Dynamic conversion calc based on npentane depletion
-                nC5_in = extract_compound_massflow(feed, "n-Pentane")
-                if nC5_in > 0:
-                    row["pfr_conversion_%"] = ((nC5_in - row["out_npentane_kg_s"]) / nC5_in) * 100
+                nC5_in_frac = extract_compound_fraction(feed, "n-Pentane")
+                if nC5_in_frac > 0:
+                    row["pfr_conversion_%"] = ((nC5_in_frac - nC5_frac) / nC5_in_frac) * 100
                 else:
                     row["pfr_conversion_%"] = 0.0
 
@@ -276,8 +277,8 @@ def sweep_distillation(interop) -> list[dict]:
 
                 flowsheet.CalculateFlowsheet()
 
-                row["distillate_purity_%"] = extract_compound_massflow(distillate, "Isopentane") * 100
-                row["bottoms_purity_%"] = extract_compound_massflow(bottoms, "n-Pentane") * 100
+                row["distillate_purity_%"] = extract_compound_fraction(distillate, "Isopentane") * 100
+                row["bottoms_purity_%"] = extract_compound_fraction(bottoms, "n-Pentane") * 100
                 
                 try:
                     row["condenser_duty_kW"] = q_cond.GetPower()
