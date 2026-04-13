@@ -1,2 +1,4 @@
 # .NET interop — bridges Python to the DWSIM .NET Automation API
 pythonnet>=3.0.0
+pandas>=1.5.0
+matplotlib>=3.5.0
